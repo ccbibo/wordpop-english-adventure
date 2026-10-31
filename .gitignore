@@ -6,3 +6,6 @@ node_modules/
 .env*
 dist/server/
 dist/.openai/
+
+# Local-only history and release backups
+_private/

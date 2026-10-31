@@ -1,6 +1,6 @@
 {
-  "name": "word-pop",
-  "version": "0.3.0",
+  "name": "wordpop-english-adventure",
+  "version": "0.3.1",
   "type": "module",
   "scripts": {
     "start": "node server-v2.mjs",

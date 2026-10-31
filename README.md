@@ -1,10 +1,10 @@
-# 消音了！英語消消樂 · Word Pop
+# 單字奇遇記 · WordPop
 
 **把英文，玩成一個故事。** 圖像、英文、繁體中文混搭的單字家族三消遊戲。
 
 ![Word Pop 產品插畫，並非遊戲截圖](docs/assets/word-pop-cover.svg)
 
-![Version](https://img.shields.io/badge/version-0.3.0-E08244?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.3.1-E08244?style=flat-square)
 ![Node](https://img.shields.io/badge/Node.js-26%2B-3A2C5C?style=flat-square)
 ![JavaScript](https://img.shields.io/badge/Vanilla-JavaScript-F4D676?style=flat-square)
 ![SQLite](https://img.shields.io/badge/storage-SQLite-3A2C5C?style=flat-square)
@@ -36,8 +36,8 @@
 - 本機版不需安裝第三方 npm 套件，也不需 AI API Key。
 
 ```bash
-git clone https://github.com/ccbibo/word-pop.git
-cd word-pop
+git clone https://github.com/ccbibo/wordpop-english-adventure.git
+cd wordpop-english-adventure
 npm start
 ```
 
@@ -53,7 +53,7 @@ npm start
 | 成長書籤 | http://127.0.0.1:8773/?view=report |
 | 排行榜 | http://127.0.0.1:8773/?view=ranks |
 
-macOS 可開啟 `啟動英語消消樂.command`；若無法直接執行，改用終端機方式。不要直接雙擊 `dist/index.html`，請從伺服器網址開啟，讓模組、帳號 API 與多人功能正常運作。
+macOS 可開啟 `啟動單字奇遇記.command`；若無法直接執行，改用終端機方式。不要直接雙擊 `dist/index.html`，請從伺服器網址開啟，讓模組、帳號 API 與多人功能正常運作。
 
 ## 怎麼玩
 
