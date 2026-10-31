@@ -1,0 +1,15 @@
+{
+  "name": "word-pop",
+  "version": "0.3.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server-v2.mjs",
+    "test": "node scripts/test.mjs",
+    "build": "node scripts/build.mjs",
+    "verify:levels": "node scripts/verify-all-levels.mjs"
+  },
+  "description": "Storybook English vocabulary match-3 game with mixed image, English and Chinese tiles, 80 levels and multiplayer rooms.",
+  "engines": {
+    "node": ">=26.0.0"
+  }
+}

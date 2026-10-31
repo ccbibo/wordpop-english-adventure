@@ -1,0 +1,24 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import fs from 'node:fs';
+import {webcrypto} from 'node:crypto';
+import {validateSave} from '../dist/schema.js';
+const source=fs.readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
+const fn=name=>{const line=source.split('\n').find(line=>line.includes(`function ${name}(`));if(!line)throw Error(`Missing application function ${name}`);const start=line.includes(`async function ${name}(`)?line.indexOf(`async function ${name}(`):line.indexOf(`function ${name}(`);return line.slice(start)};
+function fixture(level=1,practice=false){
+ const uploads=[],nodes=new Map(),data={version:1,unlocked:1,stars:{},coins:80,history:[],review:{},quiz:{},settings:{sound:true,accent:'en-US',color:true,limit:30,public:false},seconds:0,day:'2026-10-31'};
+ const game={level,practice,moves:15,c:{moves:20,target:10},score:100,t:{name:'動物園',words:[{en:'cat'}]},activeSeconds:20,cleared:12,attempts:4,successes:3,seen:new Set([0]),online:false,ended:false,recorded:false};
+ const c={data,game,qaRunning:false,crypto:webcrypto,uploadRun(value){uploads.push(value)},lastUnlock:0,themeIndex:0,Date,Set,record(){},save(){},sound(){},confetti(){},renderBoard(){},modal(){},closeModal(){},show(){},preview(){},updateHUD(){},startLevel(...args){c.started=args},$(selector){if(!nodes.has(selector))nodes.set(selector,{});return nodes.get(selector)}};
+ vm.createContext(c);vm.runInContext(fn('record')+'\n'+fn('win')+'\n'+fn('lose'),c);return {c,data,game,nodes,uploads};
+}
+test('first normal victory advances exactly one level; repeated victory does not advance again',()=>{const {c,data,game}=fixture();vm.runInContext('win()',c);assert.equal(data.unlocked,2);assert.equal(data.stars[1],3);assert.equal(data.coins,110);assert.equal(data.history.length,1);game.recorded=false;vm.runInContext('win()',c);assert.equal(data.unlocked,2);assert.equal(data.coins,120);});
+test('practice victory does not write stars, coins or unlocks; history preserves practice',()=>{const {c,data,nodes}=fixture(37,true);vm.runInContext('win()',c);assert.equal(data.unlocked,1);assert.deepEqual(data.stars,{});assert.equal(data.coins,80);assert.equal(data.history[0].practice,true);let destination;c.show=x=>destination=x;nodes.get('#next-level').onclick();assert.equal(destination,'map');assert.equal(c.themeIndex,9);});
+test('failed practice retry preserves its mode',()=>{const {c,nodes}=fixture(37,true);vm.runInContext('lose()',c);nodes.get('#retry-level').onclick();assert.equal(c.started[0],37);assert.equal(c.started[1].practice,true);});
+test('final level stops at 80 and previous best star rating never decreases',()=>{const {c,data,game}=fixture(80);data.unlocked=80;data.stars[80]=3;game.moves=0;vm.runInContext('win()',c);assert.equal(data.unlocked,80);assert.equal(data.stars[80],3);});
+test('actual normal and practice history output passes the strict save boundary',()=>{for(const practice of [false,true]){const {c,data}=fixture(1,practice);vm.runInContext('win()',c);assert.equal(validateSave(JSON.parse(JSON.stringify(data))).history[0].practice,practice);}});
+test('midnight counter reset occurs even outside game page',()=>{const timer=source.split('\n').find(line=>line.startsWith('setInterval(()=>{const today='));assert.ok(timer);const c={Date,qaRunning:false,data:{day:'2000-01-01',seconds:1800},page:'home',game:null,save(){},setInterval(fn){c.tick=fn}};vm.runInNewContext(timer,c);c.tick();assert.equal(c.data.seconds,0);assert.equal(c.data.day,new Date().toLocaleDateString('en-CA'));});
+test('both local startup and file restore invoke the common save validator; offline assets include schema',()=>{assert.match(source,/if\(raw\)saved=validateSave\(raw\)/);assert.match(fn('restore'),/validateSave\(JSON\.parse\(await file\.text\(\)\)\)/);const sw=fs.readFileSync(new URL('../dist/sw.js',import.meta.url),'utf8');assert.ok(sw.includes("'schema.js'"));});
+
+test('ranked upload occurs for normal victories only, excluding practice and QA replay',()=>{for(const [practice,qaRunning,expected]of [[false,false,1],[true,false,0],[false,true,0],[true,true,0]]){const {c,uploads}=fixture(1,practice);c.qaRunning=qaRunning;vm.runInContext('win()',c);assert.equal(uploads.length,expected);if(expected){assert.match(uploads[0].runId,/^[a-f0-9-]{36}$/);assert.equal(uploads[0].level,1);assert.equal(uploads[0].score,100);assert.equal(uploads[0].stars,3);}}});
+test('QA save isolation avoids both localStorage writes and cloud progress queueing',()=>{let writes=0,queues=0;const c={qaRunning:true,data:{version:1},storageFailed:false,localStorage:{setItem(){writes++}},queueProgress(){queues++},toast(){}};vm.createContext(c);vm.runInContext(fn('save')+';save()',c);assert.equal(writes,0);assert.equal(queues,0);c.qaRunning=false;vm.runInContext('save()',c);assert.equal(writes,1);assert.equal(queues,1);});

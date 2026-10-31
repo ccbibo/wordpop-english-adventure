@@ -1,0 +1,11 @@
+import http from 'node:http';
+import {readFile} from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
+import {handleApi} from './worker/api.js';
+import {DB} from './storage.mjs';
+const assets=new Set(['index.html','product.html','app.js','engine.js','words.js','schema.js','accounts.js','style.css','icon.svg','manifest.json','sw.js','qa-cases.json']);
+const mime={html:'text/html; charset=utf-8',js:'text/javascript; charset=utf-8',css:'text/css; charset=utf-8',svg:'image/svg+xml',json:'application/json'};
+let chain=Promise.resolve();
+export const server=http.createServer(async(req,res)=>{try{const url=new URL(req.url,'http://'+(req.headers.host||'127.0.0.1'));if(url.pathname.startsWith('/api/')){let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>131072){res.writeHead(413);res.end('資料過大');return}}const request=new Request(url,{method:req.method,headers:req.headers,...(!['GET','HEAD'].includes(req.method)?{body}: {})});const responsePromise=chain.then(()=>handleApi(request,{DB}));chain=responsePromise.catch(()=>{});const response=await responsePromise;res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));return}const filename=url.pathname==='/'?'index.html':url.pathname.slice(1);if(!assets.has(filename)){res.writeHead(404);res.end('Not found');return}const bytes=await readFile(new URL('./dist/'+filename,import.meta.url));res.writeHead(200,{'Content-Type':mime[filename.split('.').at(-1)]||'application/octet-stream','Cache-Control':'no-cache','X-Content-Type-Options':'nosniff'});res.end(req.method==='HEAD'?undefined:bytes)}catch(err){res.writeHead(500,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify({error:'服務暫時無法使用'}))}});
+server.on('error',err=>console.error('無法啟動遊戲伺服器：'+err.code));
+if(typeof process!=='undefined'&&process.argv[1]===fileURLToPath(import.meta.url))server.listen(Number(process.env.PORT)||8773,'0.0.0.0',()=>console.log('Local: http://127.0.0.1:'+(server.address().port)+'/'));
