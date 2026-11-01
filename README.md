@@ -49,7 +49,7 @@ cd wordpop-english-adventure
 npm start
 ```
 
-私人儲存庫需使用獲授權的 GitHub 帳號下載。也可透過 **Code → Download ZIP** 解壓縮，再在專案目錄執行 `npm start`。使用 nvm 的人可先執行 `nvm install`、`nvm use`。
+本儲存庫已公開，可直接 clone，也可透過 **Code → Download ZIP** 解壓縮，再在專案目錄執行 `npm start`。使用 nvm 的人可先執行 `nvm install`、`nvm use`。
 
 | 入口 | 網址 |
 | --- | --- |
